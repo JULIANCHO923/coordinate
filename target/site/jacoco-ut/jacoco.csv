@@ -1,0 +1,7 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+coordinate,co.com.ceiba.julian.henao.coordinate.dto,Coordinate,3,15,0,0,2,6,1,3,1,3
+coordinate,co.com.ceiba.julian.henao.coordinate.model,FileOperations,130,0,2,0,21,0,4,0,3,0
+coordinate,co.com.ceiba.julian.henao.coordinate.model,Constantes,7,0,0,0,2,0,1,0,1,0
+coordinate,co.com.ceiba.julian.henao.coordinate.model,Operations,0,20,0,0,0,2,0,2,0,2
+coordinate,co.com.ceiba.julian.henao.coordinate,CoordinateApplication,8,0,0,0,3,0,2,0,2,0
+coordinate,co.com.ceiba.julian.henao.coordinate.controller,CoordinateController,32,0,0,0,4,0,2,0,2,0

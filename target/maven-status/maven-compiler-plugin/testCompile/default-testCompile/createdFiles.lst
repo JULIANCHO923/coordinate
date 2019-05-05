@@ -1,0 +1,4 @@
+co\com\ceiba\julian\henao\coordinate\unitTest\TestCoordinate.class
+co\com\ceiba\julian\henao\coordinate\unitTest\OperationTest.class
+co\com\ceiba\julian\henao\coordinate\integrationTest\FileIT.class
+co\com\ceiba\julian\henao\coordinate\integrationTest\ControllerIT.class

@@ -1,0 +1,4 @@
+# Created at 2019-04-05T19:27:47.275
+Boot Manifest-JAR contains absolute paths in classpath 'D:\EPM\EPM%20-%20Entrenamiento%20coach\Java\PruebasCarga\coordinate\target\test-classes'
+Hint: <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
+

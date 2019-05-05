@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FileOperations.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">coordinate</a> &gt; <a href="index.source.html" class="el_package">co.com.ceiba.julian.henao.coordinate.model</a> &gt; <span class="el_source">FileOperations.java</span></div><h1>FileOperations.java</h1><pre class="source lang-java linenums">package co.com.ceiba.julian.henao.coordinate.model;
+
+import java.io.BufferedWriter;
+import java.nio.charset.Charset;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import co.com.ceiba.julian.henao.coordinate.dto.Coordinate;
+
+<span class="fc" id="L16">public class FileOperations {</span>
+	
+<span class="fc" id="L18">	private final static Logger LOGGER = Logger.getLogger(&quot;FileOperations&quot;);</span>
+
+	public void escribirArchivo(List&lt;Coordinate&gt; coordinates, double resultDistance,String fileName) {
+		
+<span class="fc" id="L22">		String line = &quot;(&quot; + coordinates.get(0).getX() + &quot;,&quot; + coordinates.get(0).getY() + &quot;) - (&quot;</span>
+<span class="fc" id="L23">				+ coordinates.get(1).getX() + &quot;,&quot; + coordinates.get(1).getY() + &quot;) -&gt; Distance: &quot; + resultDistance;</span>
+	
+<span class="fc" id="L25">		BufferedWriter br = null;</span>
+<span class="fc" id="L26">		Path path = Paths.get(fileName);</span>
+					   
+		try {
+			try {
+<span class="fc" id="L30">				br = Files.newBufferedWriter(path, Charset.defaultCharset(), StandardOpenOption.CREATE_NEW);</span>
+<span class="fc" id="L31">			} catch (FileAlreadyExistsException e) {</span>
+<span class="fc" id="L32">				br = Files.newBufferedWriter(path, Charset.defaultCharset(), StandardOpenOption.APPEND);</span>
+<span class="fc" id="L33">			}	</span>
+						
+<span class="fc" id="L35">			int numberLines = Files.readAllLines(path, Charset.defaultCharset()).size();								</span>
+<span class="fc" id="L36">			br.append((++numberLines) +&quot;.&quot;+line);</span>
+<span class="fc" id="L37">			br.newLine();</span>
+<span class="nc" id="L38">		} catch (Exception e) {</span>
+<span class="nc" id="L39">			LOGGER.log(Level.WARNING, &quot;Error al ingresar nueva linea al archivo --&gt; &quot;+e.getMessage());</span>
+		} finally {
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">			if (br != null) {</span>
+				try {
+<span class="fc" id="L43">					br.close();</span>
+<span class="nc" id="L44">				} catch (Exception e2) {</span>
+<span class="nc" id="L45">					LOGGER.log(Level.INFO, &quot;El archivo no pudo ser cerrado --&gt;&quot; + e2.getMessage());</span>
+<span class="fc" id="L46">				}</span>
+			}
+		}
+<span class="fc" id="L49">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>

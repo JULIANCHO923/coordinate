@@ -1,0 +1,6 @@
+co\com\ceiba\julian\henao\coordinate\model\Constantes.class
+co\com\ceiba\julian\henao\coordinate\dto\Coordinate.class
+co\com\ceiba\julian\henao\coordinate\CoordinateApplication.class
+co\com\ceiba\julian\henao\coordinate\model\FileOperations.class
+co\com\ceiba\julian\henao\coordinate\controller\CoordinateController.class
+co\com\ceiba\julian\henao\coordinate\model\Operations.class

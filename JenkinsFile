@@ -1,0 +1,209 @@
+import java.text.SimpleDateFormat
+
+node('Slave_Induccion'){
+     try{
+     
+        def dateFormat = new SimpleDateFormat("dd-MMMMM-yyyy")
+        def date = new Date()
+        String dateNow = dateFormat.format(date)
+    	env.JAVA_HOME="${tool 'JDK8_Centos'}"
+        env.MAVEN="${tool 'Maven_3.0.5_Centos'}"
+        env.PATH="${env.JAVA_HOME}/bin:${env.PATH}"
+        env.sonarHome= tool name: 'SonarScanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
+        
+        //Carpetas despliegues
+        env.CarpetaAlpha = "alpha"
+        env.CarpetaBeta = "beta"
+        env.CarpetaReleaseCandidate = "releaseCandidate"
+        env.CarpetaRelease = "release"
+        env.CarpetaReleaseUltimoEstable = "release/estable"
+        
+                
+        env.directorio = ""        
+        env.versionamiento = "${dateNow}.${BUILD_NUMBER}"
+        env.targeString = ""
+        env.etapa = "Inicio"
+        env.errorEncontrado = ""
+        
+        properties([
+            buildDiscarder(
+                logRotator(
+                    numToKeepStr: '3'
+                )
+            ),
+            disableConcurrentBuilds()
+            //,pipelineTriggers([cron('0 * * * *')])
+        ])
+        
+      
+        
+         stage('Checkout') {
+        	echo "####################->Init Checkout<-####################"
+        	env.etapa = "Checkout"
+            checkout scm
+            echo "####################->End Checkout<-####################"
+        }
+        
+        stage('Clean') {
+        	echo "####################->Init Clean<-####################"
+        	env.etapa = "Clean"            
+            sh 'mvn clean dependency:copy-dependencies --file Java/PruebasCarga/coordinate/pom.xml'
+            echo "####################->End Clean<-####################"
+        }
+        
+        stage('Process-resources') {
+        	echo "####################->Init Process-resources<-####################"
+        	env.etapa = "Process-resources"
+            sh 'mvn process-resources --file Java/PruebasCarga/coordinate/pom.xml'
+            echo "####################->End Process-resources<-####################"
+        }
+        
+        stage('Compile') {
+        	echo "####################->Init Compile<-####################"
+        	env.etapa = "Compile"
+            //sh 'mvn install -Dmaven.test.skip=true'
+            sh 'mvn compile --file Java/PruebasCarga/coordinate/pom.xml'
+            echo "####################->End Compile<-####################"
+        }
+		
+		stage('Process-test-resources') {
+        	echo "####################->Init Process-test-resources<-####################"
+        	env.etapa = "Process-test-resources"
+            sh 'mvn process-test-resources --file Java/PruebasCarga/coordinate/pom.xml'
+            echo "####################->End Process-test-resources<-####################"
+        }
+        
+        stage('Test-compile') {
+        	echo "####################->Init Test-compile<-####################"
+        	env.etapa = "Test-compile"
+            sh 'mvn test-compile --file Java/PruebasCarga/coordinate/pom.xml'
+            echo "####################->End Test-compile<-####################"
+        }
+		
+			
+		stage('Unit Test') {
+        	echo "####################->Init Unit Test<-####################"
+        	env.etapa = "Unit Test"
+        	// Solo unitarias
+            sh 'mvn test -DskipUTs=false --file Java/PruebasCarga/coordinate/pom.xml'
+            junit 'Java/PruebasCarga/coordinate/target/surefire-reports/*.xml'                                
+            echo "####################->End Unit Test<-####################"
+        }
+        
+        stage('Integration Test') {
+        	echo "####################->Init Integration Test<-####################"
+            env.etapa = "Integration Test"
+            // Solo integracion
+            sh 'mvn verify -DskipTests=false --file Java/PruebasCarga/coordinate/pom.xml'
+            junit 'Java/PruebasCarga/coordinate/target/failsafe-reports/*.xml'                                
+            echo "####################->End Integration Test<-####################"
+        }
+      
+        stage('Sonar'){
+        	echo "####################->Init Sonar<-####################"
+        	env.etapa = "Sonar"
+            withSonarQubeEnv('Sonar') {              
+               sh "${sonarHome}/bin/sonar-scanner -Dproject.settings=./${env.directorio}/sonar-project.properties"
+            }  
+            echo "####################->End Sonar<-####################"
+        }
+        
+        stage("Quality Gate"){
+        	echo "####################->Init Quality Gate<-####################"
+        	env.etapa = "Quality Gate"
+        	sleep 5
+            timeout(time: 15, unit: 'MINUTES') {
+                def qg = waitForQualityGate()
+                if (qg.status != 'OK') {
+                	error "Pipeline abortado porque el quality gate del analisis del sonar no es OK: ${qg.status}"
+                }
+            }
+            echo "####################->End Quality Gate<-####################"
+        }		
+        
+        stage('Package') {
+        	echo "####################->Init Package<-####################"
+        	env.etapa = "Package"
+            //sh 'mvn install -Dmaven.test.skip=true'
+            sh 'mvn package --file Java/PruebasCarga/coordinate/pom.xml'
+            echo "####################->End Package<-####################"
+        }
+        
+        stage('Install') {
+        	echo "####################->Init Install<-####################"
+            env.etapa = "Install"
+            sh 'mvn install --file Java/PruebasCarga/coordinate/pom.xml'
+            echo "####################->End Install<-####################"
+        }
+        
+        stage('Publish Alpha') {
+	        echo "####################->Init Publish Alpha<-####################"
+	        env.etapa = "Publish Alpha"
+            publicarArtefacto(env.CarpetaAlpha)
+            echo "####################->End Publish Alpha<-####################"        
+        }
+        
+        /*
+        stage("Proceso envio correo job iterative"){
+		    usuariosAprobacionCorreo = 'julian.henao'
+		    build wait: 'false', propagate: 'false', job: 'Pruebas/Email_Approve_Iteration', parameters: [ [$class: 'StringParameterValue', value: usuariosAprobacionCorreo, name: 'Aprobacion_Usuarios']]
+		}*/
+        
+        }catch(err){
+	        echo "Hubo un error en el pipeline"
+	        echo err.getMessage()
+	        env.errorEncontrado = err.getMessage()
+	        currentBuild.result = 'FAILURE'
+    	}finally{    	
+	        jacoco classPattern:'**/target/classes/', sourcePattern:'**/src/main/', execPattern:'**/target/coverage-reports/jacoco-it.exec,**/target/coverage-reports/jacoco-ut.exec'
+	        notificar()
+    }
+} // End Node
+
+def checkout(){
+    checkout([
+                $class: 'GitSCM', branches: [[name: '*/master']],
+                doGenerateSubmoduleConfigurations: false, 
+                extensions: [],
+                // [ $class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[ path: '']]] 
+                gitTool: 'Git_Centos', submoduleCfg: [], 
+                userRemoteConfigs: [[credentialsId: 'Coach_EPM_Julian_Henao', url: 'https://tfs.ceiba.com.co/tfs/DefaultCollection/_git/EPM%20-%20Entrenamiento%20coach']]
+            ])
+}
+
+def notificar(){
+    if(currentBuild.result == 'FAILURE'){    	
+        mail to: 'julian.henao@ceiba.com.co',
+            subject: "El pipeline ha fallado en la etapa: #<- ${env.etapa} -># ",
+            body: "Puede acceder a la informacin de la consola en el siguiente enlace:  ${env.BUILD_URL} \n############# El error encontrado fue: ############# \n ${env.errorEncontrado}"
+    }    
+}
+
+def publicarArtefacto(carpeta){
+    def server = Artifactory.server 'ar7if4c70ry@c318a'    
+    
+    echo "##############Condicional####################"
+    print("${carpeta}" == env.CarpetaReleaseUltimoEstable)
+    
+    if("${carpeta}" == env.CarpetaReleaseUltimoEstable){
+        echo "Primer condicional"
+		env.targetString = "${carpeta}"                        
+	}else{
+	    echo "Segundo condicional"
+		env.targetString = "${carpeta}/${versionamiento}"
+    }                                                    
+    def uploadSpec = '''{
+                         "files": [
+                                   {
+                                        "pattern": "target/*.jar",
+                                        "target": "libs-snapshot/CoachEPM/Java/Coordenadas/${targetString}/coordenadas.jar"
+                                    }
+                            ]
+                        }'''
+    
+    def buildInfo = Artifactory.newBuildInfo()
+        buildInfo.env.capture = true
+        buildInfo.number = "${carpeta}-${versionamiento}"
+        server.upload spec: uploadSpec, buildInfo: buildInfo
+        server.publishBuildInfo buildInfo    
+}
