@@ -47,14 +47,14 @@ node('Slave_Induccion'){
         stage('Clean') {
         	echo "####################->Init Clean<-####################"
         	env.etapa = "Clean"            
-            sh 'mvn clean --file Java//PruebasCarga//coordinate//pom.xml'
+            sh 'mvn clean --file pom.xml'
             echo "####################->End Clean<-####################"
         }
         /* Solo si se trabaja con recursos
         stage('Process-resources') {
         	echo "####################->Init Process-resources<-####################"
         	env.etapa = "Process-resources"
-            sh 'mvn process-resources --file Java//PruebasCarga//coordinate//pom.xml'
+            sh 'mvn process-resources --file pom.xml'
             echo "####################->End Process-resources<-####################"
         }
         */
@@ -62,21 +62,21 @@ node('Slave_Induccion'){
         	echo "####################->Init Compile<-####################"
         	env.etapa = "Compile"
             //sh 'mvn install -Dmaven.test.skip=true'
-            sh 'mvn compile --file Java//PruebasCarga//coordinate//pom.xml'
+            sh 'mvn compile --file pom.xml'
             echo "####################->End Compile<-####################"
         }
 		/*
 		stage('Process-test-resources') {
         	echo "####################->Init Process-test-resources<-####################"
         	env.etapa = "Process-test-resources"
-            sh 'mvn process-test-resources --file Java//PruebasCarga//coordinate//pom.xml'
+            sh 'mvn process-test-resources --file pom.xml'
             echo "####################->End Process-test-resources<-####################"
         }
         */
         stage('Test-compile') {
         	echo "####################->Init Test-compile<-####################"
         	env.etapa = "Test-compile"
-            sh 'mvn test-compile --file Java//PruebasCarga//coordinate//pom.xml'
+            sh 'mvn test-compile --file pom.xml'
             echo "####################->End Test-compile<-####################"
         }		
 			
@@ -84,8 +84,8 @@ node('Slave_Induccion'){
         	echo "####################->Init Unit Test<-####################"
         	env.etapa = "Unit Test"
         	// Solo unitarias
-            sh 'mvn test -DskipUTs=false --file Java//PruebasCarga//coordinate//pom.xml'
-             junit 'Java/PruebasCarga/coordinate/target/surefire-reports/*.xml' 
+            sh 'mvn test -DskipUTs=false --file pom.xml'
+             junit '**/target/surefire-reports/*.xml' 
             echo "####################->End Unit Test<-####################"
         }
       
@@ -93,8 +93,8 @@ node('Slave_Induccion'){
         	echo "####################->Init Integration Test<-####################"
             env.etapa = "Integration Test"
             // Solo integracion
-           sh 'mvn verify -DskipTests=false --file Java//PruebasCarga//coordinate//pom.xml'
-           junit 'Java/PruebasCarga/coordinate/target/failsafe-reports/*.xml'                               
+           sh 'mvn verify -DskipTests=false --file pom.xml'
+           junit '**/target/failsafe-reports/*.xml'                               
             echo "####################->End Integration Test<-####################"
         }
         
@@ -124,14 +124,14 @@ node('Slave_Induccion'){
         	echo "####################->Init Package<-####################"
         	env.etapa = "Package"
             //sh 'mvn install -Dmaven.test.skip=true'
-            sh 'mvn package --file Java//PruebasCarga//coordinate//pom.xml'
+            sh 'mvn package --file pom.xml'
             echo "####################->End Package<-####################"
         }
         
         stage('Install') {
         	echo "####################->Init Install<-####################"
             env.etapa = "Install"
-            sh 'mvn install --file Java//PruebasCarga//coordinate//pom.xml'
+            sh 'mvn install --file pom.xml'
             echo "####################->End Install<-####################"
         }
         /*
@@ -166,7 +166,7 @@ def checkout(){
                 extensions: [],
                 // [ $class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[ path: '']]] 
                 gitTool: 'Git_Centos', submoduleCfg: [], 
-                userRemoteConfigs: [[credentialsId: 'Coach_EPM_Julian_Henao', url: 'https://tfs.ceiba.com.co/tfs/DefaultCollection/_git/EPM%20-%20Entrenamiento%20coach']]
+                userRemoteConfigs: [[credentialsId: 'GitHub_juliancho923', url: 'https://github.com/JULIANCHO923/coordinate']]
             ])
 }
 
@@ -194,8 +194,8 @@ def publicarArtefacto(carpeta){
     def uploadSpec = '''{
                          "files": [
                                    {
-                                        "pattern": "target/*.jar",
-                                        "target": "libs-snapshot/CoachEPM/Java/Coordenadas/${targetString}/coordenadas.jar"
+                                        "pattern": "target/*.war",
+                                        "target": "libs-snapshot/CoachEPM/Java/Coordenadas/${targetString}/coordenadas.war"
                                     }
                             ]
                         }'''
